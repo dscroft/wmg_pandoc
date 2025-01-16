@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+"""
+Pandoc filter to process image blocks and to crop if specified.
+Crop values can be specified in pixels or percent.
+
+For example the following will crop 10% of the image from each edge.
+    ![Image caption](image.png){l=10% t=10% r=10% b=10%}
+
+Whereas the following will crop the region l to r and t to b pixels from each edge.
+    ![Image caption](image.png){l=10 t=10 r=20 b=20}
+
+If l (left), t (top), r (right), or b (bottom) are not specified, 
+they will default to 0%.
+
+Cropped images are cached and will not be cropped again unless the 
+src filename or crop values change.
+
+Needs pandocfilers and PIL
+"""
+
+import os
+import sys
+import urllib.parse
+
+from PIL import Image as PILImage
+
+from pandocfilters import toJSONFilter, Para, Image, get_filename4code, get_caption, get_extension, get_value
+
+def convert_value(k, v, width, height):
+    if not v.endswith("%"):
+        return float(v)
+
+    if k == "l":
+        return float(v[:-1]) / 100 * width
+    if k == "t":
+        return float(v[:-1]) / 100 * height
+    if k == "r":
+        return width - float(v[:-1]) / 100 * width
+    if k == "b":
+        return height - float(v[:-1]) / 100 * height
+
+def imagecrop(key, value, format, meta):
+    if key == 'Image':
+        [attrs, caption, src] = value
+
+        cropvals = { k: v for k, v in attrs[2] if k in "tblr" }
+        if len(cropvals) == 0: return
+
+        filetype = get_extension(format, "png")
+        dest = get_filename4code("imagecrop", src[0]+str(cropvals), filetype)
+
+        # if image does not already exist, crop it
+        if not os.path.isfile( dest ):
+            # open image and crop it
+            try:
+                filename = urllib.parse.unquote(src[0])
+                im = PILImage.open( filename )
+            except FileNotFoundError as e:
+                sys.stderr.write( f"Could not find image file: {filename}\n" )
+                sys.exit(1)
+            width, height = im.size
+
+            cropdefaults = { "l": 0, "t": 0, "r": width-1, "b": height-1 }
+
+            cropconvert = { k: convert_value( k, v, width, height ) for k, v in cropvals.items() }
+
+            cropfull = { k: cropconvert.get(k,v) for k, v in cropdefaults.items() }
+
+            im = im.crop( [ cropfull[i] for i in "ltrb" ] )
+
+            im.save( dest )
+
+        return Image( attrs, caption, [dest,src[1]] )
+
+if __name__ == "__main__":
+    toJSONFilter(imagecrop)
