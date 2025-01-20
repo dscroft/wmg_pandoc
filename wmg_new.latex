@@ -394,6 +394,7 @@ $if(beamer)$
     \setbeamercolor{section title}{fg=white}
     \setbeamerfont{quote}{size=\Large,parent=structure}
     \setbeamerfont{note page}{size=\scriptsize}
+    \addtobeamertemplate{note page}{\setbeamerfont{itemize/enumerate subbody}{size=\scriptsize}}{}
     \setbeamercolor{bibliography}{fg=black}
 
     \setbeamertemplate{qapage}{ %
