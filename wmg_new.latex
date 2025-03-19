@@ -623,6 +623,18 @@ $if(beamer)$
           \end{minipage}
         };
      \end{tikzpicture}
+
+      \note{Use `pdfpc --notes=right file.pdf`}
+      \note[item]{ctrl + q to quit}
+      \note[item]{shift + c to arrange notes layout}
+      \note[item]{1 nothing}
+      \note[item]{2 laser}
+      \note[item]{3 pen}
+      \note[item]{4 eraser}
+      \note[item]{5 torch}
+      \note[item]{c clear drawing}
+      \note[item]{d show/hide drawing}
+      \note[item]{? cheat sheet}
     }
 
     \setbeamertemplate{section page}{
