@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+
+"""
+Pandoc filter to filter out elements with a specific class.
+
+For example...
+
+    pandoc -t json | python3 pandoc-classfilter myclass | pandoc
+
+
+Needs pandocfilers
+"""
+
+import os
+import sys
+
+
+from PIL import Image as PILImage
+
+from pandocfilters import toJSONFilter, Str
+
+def convert_value(k, v, width, height):
+    if not v.endswith("%"):
+        return float(v)
+
+    if k == "l":
+        return float(v[:-1]) / 100 * width
+    if k == "t":
+        return float(v[:-1]) / 100 * height
+    if k == "r":
+        return width - float(v[:-1]) / 100 * width
+    if k == "b":
+        return height - float(v[:-1]) / 100 * height
+
+def imagecrop(key, value, format, meta):
+    if key == 'Div':
+        [[ident, classes, kvs], contents] = value
+
+        if 'notes' in classes:
+            return []
+
+if __name__ == "__main__":
+    toJSONFilter(imagecrop)
