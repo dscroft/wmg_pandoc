@@ -9,6 +9,9 @@ $if(CJKmainfont)$
 $endif$
 %
 \documentclass[
+$if(draft)$
+  draft,
+$endif$
 $if(fontsize)$
   $fontsize$,
 $endif$
@@ -358,6 +361,9 @@ $if(beamer)$
   % === START DAVID ADDITIONS ===
     \usepackage{tikz}
 
+    % adjust geometry for template
+    %\geometry{bottom=10cm}
+
     $if(notes)$
       \setbeameroption{show notes on second screen=right}
     $else$
@@ -366,9 +372,9 @@ $if(beamer)$
 
     % enable page numbers
     %\setbeamertemplate{navigation symbols}{}
-    \setbeamertemplate{footline}[page number]
+    \setbeamertemplate{footline}[page number]{\vspace{0.5cm}}
 
-    \addtobeamertemplate{note page}{\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}}{}
+    %\addtobeamertemplate{note page}{\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}}{}
 
     \definecolor{wmgblue}{RGB}{5 161 226}
     \definecolor{wmgred}{RGB}{227 45 34}
@@ -548,7 +554,7 @@ $if(beamer)$
         };
       \end{tikzpicture}
 
-      \vspace{1cm}
+      \vspace{0.8cm}
     }
 
     \setbeamertemplate{title page}{
