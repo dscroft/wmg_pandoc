@@ -360,6 +360,28 @@ $endif$
 $if(beamer)$
   % === START DAVID ADDITIONS ===
     \usepackage{tikz}
+    \usepackage{color}
+
+    % traffic light system for materials
+    \definecolor{doworkgreen}{rgb}{0.13,0.69,0.30} % This is the color used for comments
+    \definecolor{doworkyellow}{rgb}{1,0.79,0.06}
+    \definecolor{doworkred}{rgb}{0.93,0.11,0.14}
+
+    \newcommand{\difficultysection}[2]
+    {
+      \begin{tikzpicture}[remember picture, overlay]
+          \node[anchor=north east] at ([yshift=-0.27cm,xshift=-3.0cm]current page.north east)
+          {
+            \begin{tikzpicture}[remember picture, overlay]
+              \node[fill,circle,minimum size=0.08\textheight,fill=#1,text=white,font=\bfseries] at (0,0) {#2};
+            \end{tikzpicture}
+          };
+      \end{tikzpicture}
+    }
+
+    \newcommand{\passsection}{\difficultysection{doworkgreen}{C}}
+    \newcommand{\goodsection}{\difficultysection{doworkyellow}{I}}
+    \newcommand{\advsection}{\difficultysection{doworkred}{A}}
 
     % adjust geometry for template
     %\geometry{bottom=10cm}
@@ -799,6 +821,14 @@ $endif$
 $if(csquotes)$
 \usepackage{csquotes}
 $endif$
+% === START DAVID ADDITIONS ===
+$if(mdframed)$
+\usepackage{mdframed}
+$endif$
+$if(minted)$
+\usepackage{minted}
+$endif$
+% === END DAVID ADDITIONS ===
 \usepackage{bookmark}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{$if(urlstyle)$$urlstyle$$else$same$endif$}
