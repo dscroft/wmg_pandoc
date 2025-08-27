@@ -1,0 +1,192 @@
+#!/usr/bin/env python3
+
+## pandoc-include-code
+#
+# This filter allows you to include code from a file into your document.
+# The code is wrapped in a mdframed environment and can be styled using
+# the parameters of the mdframed environment.
+#   e.g.
+#       ```{.cpp include="code.cpp"}
+#       ```
+# The filter also allows you to dedent the code and wrap the code to a
+# certain width.
+#   e.g.
+#       ```{.cpp dedent="4" wrap="20"}
+#           int main() { std::cout << "Hello World!" << std::endl; }
+#       ```
+#
+# The filter also allows you to replace patterns in the code with a
+# replacement string. The patterns are processed in order that they
+# are listed in the keyvals.
+#   e.g.
+#       ```{.cpp include="code.cpp" pattern="^//\s*#include\s*<(.*)>$" 
+#               repl="#include <\1>"}
+#       ```
+#
+# The filter also allows you to specify the fontsize of the code.
+#   e.g.
+#       ```{.cpp include="code.cpp" fontsize="tiny"}
+#       ```
+#
+
+import os, sys, re
+import textwrap
+
+from pandocfilters import toJSONFilter, Emph, Para, CodeBlock, RawBlock
+
+DEFAULTSIZE = "normalsize"
+
+def dedent( contents, d=0 ):
+    return [ i[d:] for i in contents ]
+
+def file_contents( filename ):
+    with open( filename, "r" ) as f:
+        return f.read()
+
+def wrap( contents, width: int=0 ):
+    overflowChar = "¬"
+
+    for line in contents:
+        if width == 0 or len(line) < width: 
+            yield line
+            continue
+
+        newline = "" 
+        for word in re.split("\s", line):
+            proposedLength = len(newline) + len(word)
+            if proposedLength < width:  
+                newline += f"{word} "
+            elif proposedLength == width:
+                yield newline + word
+                newline = f"{overflowChar} "
+            # overflow
+            elif len(newline) == 0:
+                yield word
+            else:
+                yield newline
+                newline = f"{overflowChar} {word} "
+
+        if newline.strip() != overflowChar:
+            yield newline
+
+
+def get_correct_size(size):
+    """
+    Get correct size.
+    """
+    knownsizes = [ "tiny", 
+                "scriptsize", 
+                "footnotesize", 
+                "small", 
+                "normalsize", 
+                "large", 
+                "Large", 
+                "LARGE", 
+                "huge", 
+                "Huge" ]
+
+    if size in knownsizes:
+        return size
+    
+    try:
+        size = int(size)
+    except ValueError:
+        return DEFAULTSIZE
+
+    idx = knownsizes.index( DEFAULTSIZE ) + size
+    return knownsizes[ max( 0, min( len(knownsizes)-1, idx) ) ]
+
+def get_path( meta ):
+    try:
+       path = meta["pandoc-include-code"]["c"]["path"]["c"][0]["c"]
+    except:
+       path = ""
+
+    return path
+
+def get_border( meta ):
+    try:
+        return meta["pandoc-include-code"]["c"]["border"]["c"]
+    except:
+        return False
+
+def process(key, value, format, meta):
+    if key == "CodeBlock":
+        [[ident, classes, keyvals], code] = value
+
+        # get default parameter values
+        border = get_border( meta )
+        fontsize = DEFAULTSIZE
+
+        # process parameters
+        for i in keyvals:
+            if i[0] == "include":
+                filename = os.path.join( get_path( meta ), i[-1] )
+                code = file_contents( filename )
+
+            elif i[0] == "fontsize":
+                fontsize = get_correct_size( i[-1] )
+
+            elif i[0] == "border":
+                border = i[-1].lower() in ("true", "1")
+
+        # process pattern parameters, pattern parameters are processed in order
+        # that they are listed in the keyvals
+        pattern = None
+        for i in keyvals:
+            if i[0] == "pattern":
+                pattern = i[-1]
+            elif i[0] == "repl" and pattern is not None:
+                code = re.sub( pattern, i[-1], code )
+                pattern = None
+
+        contents = code.split("\n")
+
+        try:
+            mn = min( ( int(i[-1]) for i in keyvals if i[0] == "startLine" ) ) -1
+        except ValueError: 
+            mn = 0
+
+        try:
+            mx = min( ( int(i[-1]) for i in keyvals if i[0] == "endLine" ) )
+        except ValueError:
+            mx = len( contents )
+
+        try:
+            d = min( ( int(i[-1]) for i in keyvals if i[0] == "dedent" ) )
+        except ValueError: 
+            d = 0
+
+        try: 
+            w = min( ( int(i[-1]) for i in keyvals if i[0] == "wrap" ) )
+        except ValueError:
+            w = 0
+
+        # only care about these lines
+        contents = contents[mn:mx]
+
+        # dedent the lines
+        contents = dedent( contents, d )
+
+        # code needs to be wrapped
+        contents = list( wrap( contents, w ) )
+
+        prefix = [RawBlock( "latex", f"\\begingroup\n\\{fontsize}\n")]
+        postfix = [RawBlock( "latex", r"\endgroup")]
+
+        if border:
+            begincommand = r"""\begin{mdframed}[backgroundcolor=white,
+                                                innerleftmargin=3,
+                                                innerrightmargin=3,
+                                                innertopmargin=3,
+                                                skipabove=3,
+                                                skipbelow=3]"""
+            endcommand = r"""\end{mdframed}"""
+
+            prefix  = prefix + [RawBlock( "latex", begincommand)]
+            postfix = [RawBlock( "latex", endcommand)] + postfix
+
+        return prefix + [CodeBlock( [ident, classes, keyvals], "\n".join(contents) )] + postfix
+
+if __name__ == "__main__":
+  toJSONFilter(process)

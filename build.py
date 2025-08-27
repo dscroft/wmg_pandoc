@@ -36,7 +36,8 @@ def generate(markdownfile, rootdir, version):
     filters = ["pandoc-include",
               "graphviz",
               "pandoc-imagecrop",
-              "pandoc-attribution"]
+              "pandoc-attribution",
+              "pandoc-include-code"]
     if version == "accessible":
         filters += ["pandoc-classfilter"]
 
