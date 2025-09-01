@@ -39,6 +39,9 @@ DEFAULTSIZE = "normalsize"
 def dedent( contents, d=0 ):
     return [ i[d:] for i in contents ]
 
+def truncate( contents, t=0 ):
+    return [ i if len(i) < t else f"{i[:t-3]}..." for i in contents ]
+
 def file_contents( filename ):
     with open( filename, "r" ) as f:
         return f.read()
@@ -117,6 +120,7 @@ def process(key, value, format, meta):
         # get default parameter values
         border = get_border( meta )
         fontsize = DEFAULTSIZE
+        trunc = None
 
         # process parameters
         for i in keyvals:
@@ -129,6 +133,9 @@ def process(key, value, format, meta):
 
             elif i[0] == "border":
                 border = i[-1].lower() in ("true", "1")
+
+            elif i[0] == "trunc":
+                trunc = int( i[-1] )
 
         # process pattern parameters, pattern parameters are processed in order
         # that they are listed in the keyvals
@@ -170,6 +177,9 @@ def process(key, value, format, meta):
 
         # code needs to be wrapped
         contents = list( wrap( contents, w ) )
+
+        # code needs to be truncated
+        if trunc: contents = truncate( contents, trunc )
 
         prefix = [RawBlock( "latex", f"\\begingroup\n\\{fontsize}\n")]
         postfix = [RawBlock( "latex", r"\endgroup")]
