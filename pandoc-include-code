@@ -52,7 +52,7 @@ def wrap( contents, width: int=0 ):
             continue
 
         newline = "" 
-        for word in re.split("\s", line):
+        for word in re.split(r"\s", line):
             proposedLength = len(newline) + len(word)
             if proposedLength < width:  
                 newline += f"{word} "

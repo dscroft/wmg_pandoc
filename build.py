@@ -77,7 +77,7 @@ def generate(markdownfile, rootdir, version):
         raise subprocess.CalledProcessError(return_code, command)
 
 def find_files(markdownfile, rootdir):
-    reg = re.compile(f"!include\s*([a-zA-Z0-9_.\/-]+{markdownfile})")
+    reg = re.compile(f"!include\\s*([a-zA-Z0-9_.\\/\\-]+{markdownfile})")
 
     files = []
     for filename in glob.glob(opj(rootdir, "src", "**", "*.md"), recursive=True):
