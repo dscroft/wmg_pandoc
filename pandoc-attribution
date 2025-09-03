@@ -15,7 +15,7 @@ import os
 import sys
 
 
-from pandocfilters import toJSONFilter, Str
+from pandocfilters import toJSONFilter, Str, Div
 
 
 def attribution(key, value, format, meta):
@@ -25,7 +25,10 @@ def attribution(key, value, format, meta):
         if 'attribution' not in classes: return
 
         if format == 'html':
-            return # todo
+            kvs += [["style","font-size: small; text-align: right;"]]
+
+            return Div([ident, classes, kvs], contents)
+
         elif format in ('latex', 'beamer'):
             return [{'t': 'Plain', 'c': [
                         {'t': 'RawInline', 'c': ['tex', '{ \\flushright ']}, 
@@ -34,17 +37,6 @@ def attribution(key, value, format, meta):
                     [{'t': 'Plain', 'c': [
                         {'t': 'RawInline', 'c': ['tex', '} ']}]}]
 
-
-            
-        
-            print( key, file=sys.stderr )
-            print( ident, file=sys.stderr )
-            print( classes, file=sys.stderr )
-            print( kvs, file=sys.stderr )
-            print( contents, file=sys.stderr )
-            print( format, file=sys.stderr )
-            #print( meta, file=sys.stderr)
-            return []
 
 if __name__ == "__main__":
     toJSONFilter(attribution)
