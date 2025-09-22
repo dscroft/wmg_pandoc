@@ -3,18 +3,15 @@
 # declare function that takes a file as argument
 # and converts it to a pdf file
 # using pandoc
-import cmd
 import glob
 import os
 from os.path import join as opj
-from statistics import mode
 import subprocess
 import sys
 import re
 import shutil
 import logging
-
-logging.basicConfig(level=logging.INFO)
+import getopt
 
 rootdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -37,12 +34,12 @@ def pandoc(markdownfile, mode):#
                        "--from=markdown+rebase_relative_paths", 
                         f"--resource-path={opj(rootdir, 'resource')}",
                         f"--metadata=include-resources:{opj(rootdir, 'src')}",
-                        "--citeproc", 
                         "--filter=pandoc-include",
                         "--filter=graphviz",
                         "--filter=pandoc-imagecrop",
                         "--filter=pandoc-attribution",
-                        "--filter=pandoc-include-code"]
+                        "--filter=pandoc-include-code",
+                        "--citeproc" ]
 
     beamer_defaults = ["--to=beamer+smart", 
                        f"--template={opj(rootdir, 'wmg_pandoc', 'wmg_new.latex')}", 
@@ -104,6 +101,7 @@ def latex(texfile):
     latex_defaults = ["pdflatex", 
                       "-interaction=nonstopmode",          
                       "-halt-on-error",
+                      "-shell-escape",
                       f"-output-directory={os.path.dirname(texfile)}",
                       texfile]
     
@@ -137,7 +135,7 @@ def generate(markdownfile, mode):
     # check if the file exists
     if not os.path.isfile(markdownfile):
         print(f"{markdownfile} does not exist", file=sys.stderr)
-        return
+        raise FileNotFoundError(markdownfile)
 
     try:
         if mode == "accessible":
@@ -147,9 +145,10 @@ def generate(markdownfile, mode):
     except subprocess.CalledProcessError as e:
         logging.error( f"Error running command: {" ".join(e.cmd)}" )
         if isinstance(e.output, list) and e.output:
-            for line in e.output[-20:]:
+            for line in e.output[-30:]:
                 logging.error( line )
-                
+
+
 def find_files(markdownfile, rootdir):
     # regex = r"!include\s*([a-zA-Z0-9_.\/\-]+"+re.escape(markdownfile)+r")"
     regex = r"!include\s+(.*"+re.escape(markdownfile)+r")"
@@ -157,6 +156,7 @@ def find_files(markdownfile, rootdir):
 
     files = []
     for filename in glob.glob(opj(rootdir, "**", "*.md"), recursive=True):
+        print( filename )
         with open(filename, "r") as f:
             matches = reg.findall(f.read())
             if matches:
@@ -166,12 +166,23 @@ def find_files(markdownfile, rootdir):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python3 build.py <file.md> [version]")
+    # Default logging level
+    loglevel = logging.INFO
+
+    # Parse command line options for -d / --debug
+    opts, args = getopt.getopt(sys.argv[1:], "d", ["debug"])
+    for opt, _ in opts:
+        if opt in ("-d", "--debug"):
+            loglevel = logging.DEBUG
+
+    logging.basicConfig(level=loglevel)
+
+    if len(args) < 1:
+        print("Usage: python3 build.py [-d|--debug] <file.md> [version]")
         sys.exit(1)
 
-    markdownfile = sys.argv[1]
-    version = sys.argv[2] if len(sys.argv) > 2 else "notes"
+    markdownfile = args[0]
+    version = args[1] if len(args) > 1 else "notes"
 
     rootdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -179,6 +190,7 @@ if __name__ == "__main__":
     # specified file exists in the src directory then gen that file,
     # otherwise assume that it is in a subdirectory and search for the parent md file
     # that contains it and generate that file
+
     while files != []:
         currentfile = opj(rootdir, "src", files[0])
 
