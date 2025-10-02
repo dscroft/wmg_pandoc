@@ -12,6 +12,7 @@ import re
 import shutil
 import logging
 import getopt
+from colorama import Fore, Back, Style
 
 rootdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -143,10 +144,11 @@ def generate(markdownfile, mode):
         elif mode in ("notes", "present"):
             move(latex(pandoc(markdownfile, mode)), opj(rootdir, mode))
     except subprocess.CalledProcessError as e:
-        logging.error( f"Error running command: {" ".join(e.cmd)}" )
+        logging.debug( f"Error running command: {" ".join(e.cmd)}" )
         if isinstance(e.output, list) and e.output:
             for line in e.output[-30:]:
                 logging.error( line )
+        return True
 
 
 def find_files(markdownfile, rootdir):
@@ -196,12 +198,15 @@ if __name__ == "__main__":
 
         if os.path.isfile(currentfile):
             print( f"Generating {currentfile}..." )
-            generate(currentfile, version)
+            if generate(currentfile, version):
+                print( f"{Fore.RED}Error.{Style.RESET_ALL}" )
+                sys.exit(1)
         else:
             print( f"Searching for {files[0]}..." )
             files += find_files(files[0], opj(rootdir, "src"))
         
         files.pop(0)
 
-    print( "Done." )
+    print( f"{Fore.GREEN}Done.{Style.RESET_ALL}" )
+    sys.exit(0)
 
