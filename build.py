@@ -132,7 +132,15 @@ def move(src, dst):
     shutil.move(src, dst)
 
 
-def generate(markdownfile, mode):
+def generate(markdownfile, mode, loop_num=1):
+    """ Generate the specified output from the given markdown file.
+        mode can be one of:
+          - accessible: generate an accessible HTML version 
+          - present: generate a beamer presentation without notes
+          - notes: generate a beamer presentation with notes
+        loop_num specifies how many times to run LaTeX to resolve references
+    """
+
     # check if the file exists
     if not os.path.isfile(markdownfile):
         print(f"{markdownfile} does not exist", file=sys.stderr)
@@ -142,7 +150,11 @@ def generate(markdownfile, mode):
         if mode == "accessible":
             pandoc(markdownfile, mode)
         elif mode in ("notes", "present"):
-            move(latex(pandoc(markdownfile, mode)), opj(rootdir, mode))
+            texfile = pandoc(markdownfile, mode)
+            for i in range(loop_num):
+                logging.debug(f"LaTeX run {i+1} of {loop_num}")
+                pdf_file = latex(texfile)
+            move(pdf_file, opj(rootdir, mode))
     except subprocess.CalledProcessError as e:
         logging.debug( f"Error running command: {" ".join(e.cmd)}" )
         if isinstance(e.output, list) and e.output:
@@ -171,11 +183,15 @@ if __name__ == "__main__":
     # Default logging level
     loglevel = logging.INFO
 
+    loop_num = 1
+
     # Parse command line options for -d / --debug
-    opts, args = getopt.getopt(sys.argv[1:], "d", ["debug"])
-    for opt, _ in opts:
+    opts, args = getopt.getopt(sys.argv[1:], "dl:", ["debug", "loop="])
+    for opt, val in opts:
         if opt in ("-d", "--debug"):
             loglevel = logging.DEBUG
+        elif opt in ("-l", "--loop"):
+            loop_num = int(val)
 
     logging.basicConfig(level=loglevel)
 
@@ -198,9 +214,9 @@ if __name__ == "__main__":
 
         if os.path.isfile(currentfile):
             print( f"Generating {currentfile}..." )
-            if generate(currentfile, version):
+            if generate(currentfile, version, loop_num):
                 print( f"{Fore.RED}Error.{Style.RESET_ALL}" )
-                sys.exit(1)
+                break
         else:
             print( f"Searching for {files[0]}..." )
             files += find_files(files[0], opj(rootdir, "src"))
