@@ -150,12 +150,12 @@ def process(key, value, format, meta):
         contents = code.split("\n")
 
         try:
-            mn = min( ( int(i[-1]) for i in keyvals if i[0] == "startLine" ) ) -1
+            mn = min( ( int(i[-1]) for i in keyvals if i[0] in ("start", "startLine", "begin", "beginLine") ) ) -1
         except ValueError: 
             mn = 0
 
         try:
-            mx = min( ( int(i[-1]) for i in keyvals if i[0] == "endLine" ) )
+            mx = min( ( int(i[-1]) for i in keyvals if i[0] in ("stop", "stopLine", "end", "endLine" ) ) )
         except ValueError:
             mx = len( contents )
 

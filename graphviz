@@ -11,8 +11,10 @@ import os
 import sys
 
 import pygraphviz
+import requests
 
 from pandocfilters import toJSONFilter, Para, Image, get_filename4code, get_caption, get_extension, get_value
+import shutil
 
 def graphviz(key, value, format, _):
     if key == 'CodeBlock':
@@ -20,14 +22,23 @@ def graphviz(key, value, format, _):
         if "graphviz" in classes:
             caption, typef, keyvals = get_caption(keyvals)
             prog, keyvals = get_value(keyvals, u"prog", u"dot")
-            filetype = get_extension(format, "png", html="png", latex="pdf")
+            filetype = get_extension(format, "png", beamer="pdf", html="svg", latex="pdf")
             dest = get_filename4code("graphviz", code, filetype)
 
             if not os.path.isfile(dest):
-                g = pygraphviz.AGraph(string=code)
-                g.layout()
-                g.draw(dest, prog=prog)
-                sys.stderr.write('Created image ' + dest + '\n')
+                # assuming that the specified program is installed and in PATH
+                if shutil.which(prog):
+                    g = pygraphviz.AGraph(string=code)
+                    g.layout()
+                    g.draw(dest, prog=prog)
+                    sys.stderr.write(f'Created image {dest}\n')
+                # otherwise using quickchart.io api
+                else:
+                    url = f"https://quickchart.io/graphviz?format={requests.utils.quote(filetype)}&graph={requests.utils.quote(code)}"
+                    response = requests.get(url)
+                    with open(dest, "wb") as f:
+                        f.write(response.content)
+                    sys.stderr.write(f'Created image using quickchart.io {dest}\n')
 
             return Para([Image([ident, [], keyvals], caption, [dest, typef])])
 

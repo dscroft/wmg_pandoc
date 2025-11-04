@@ -14,25 +14,11 @@ Needs pandocfilers
 import os
 import sys
 
-
 from PIL import Image as PILImage
 
 from pandocfilters import toJSONFilter, Str
 
-def convert_value(k, v, width, height):
-    if not v.endswith("%"):
-        return float(v)
-
-    if k == "l":
-        return float(v[:-1]) / 100 * width
-    if k == "t":
-        return float(v[:-1]) / 100 * height
-    if k == "r":
-        return width - float(v[:-1]) / 100 * width
-    if k == "b":
-        return height - float(v[:-1]) / 100 * height
-
-def imagecrop(key, value, format, meta):
+def classfilter(key, value, format, meta):
     if key == 'Div':
         [[ident, classes, kvs], contents] = value
 
@@ -40,4 +26,4 @@ def imagecrop(key, value, format, meta):
             return []
 
 if __name__ == "__main__":
-    toJSONFilter(imagecrop)
+    toJSONFilter(classfilter)
