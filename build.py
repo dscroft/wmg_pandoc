@@ -3,11 +3,11 @@
 # declare function that takes a file as argument
 # and converts it to a pdf file
 # using pandoc
+
 import cmd
 import glob
 import os
 from os.path import join as opj
-from statistics import mode
 import subprocess
 import sys
 import re
@@ -102,12 +102,17 @@ def latex(texfile):
                               universal_newlines=True, 
                               stdout=subprocess.PIPE, 
                               stderr=subprocess.STDOUT)
+
+    lines = []
+    for line in popen.stdout:
+        lines = lines[-10:] + [line]
     
     return_code = popen.wait()
     if return_code:
-        raise subprocess.CalledProcessError(return_code, latex_defaults)
+            sys.stdout.write("".join(lines))
+            raise subprocess.CalledProcessError(return_code, " ".join(latex_defaults))
     
-    return texfile[:-3] + "pdf"
+    return os.path.splitext(texfile)[0] + ".pdf"
 
 def move(src, dst):
     logging.info(f"Moving {src} to {dst}")
@@ -164,12 +169,15 @@ if __name__ == "__main__":
     while files != []:
         currentfile = opj(rootdir, "src", files.pop(0))
 
-        if os.path.isfile(currentfile):
-            print( f"Generating {currentfile}..." )
-            generate(currentfile, version)
-        else:
-            print( f"Searching for {markdownfile}..." )
+        try:
+            if os.path.isfile(currentfile):
+                print( f"Generating {currentfile}..." )
+                generate(currentfile, version)
+            else:
+                print( f"Searching for {markdownfile}..." )
             files += find_files(markdownfile, rootdir)
+        except subprocess.CalledProcessError as e:
+            print(f"Error occurred while processing {currentfile}: {e}", file=sys.stderr)
 
     print( "Done." )
 
