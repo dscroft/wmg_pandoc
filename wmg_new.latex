@@ -394,9 +394,12 @@ $if(beamer)$
       \setbeameroption{hide notes}
     $endif$
 
+    %\setbeamercolor{background canvas}{bg=yellow!20}
+
     % enable page numbers
     %\setbeamertemplate{navigation symbols}{}
-    \setbeamertemplate{footline}[page number]{\vspace{0.5cm}}
+    %\setbeamertemplate{footline}[page number]{\vspace{0.5cm}}
+    \setbeamertemplate{footline}{\hfill \insertframenumber/\inserttotalframenumber \  \copyright WMG \the\year}
 
     %\addtobeamertemplate{note page}{\setbeamerfont{itemize/enumerate subbody}{size=\footnotesize}}{}
 
@@ -906,7 +909,11 @@ $if(has-frontmatter)$
 $endif$
 $if(title)$
 $if(beamer)$
-\frame{\titlepage}
+\begin{frame}
+  \titlepage
+  \clearpage\thispagestyle{empty}
+\end{frame}
+
 $else$
 \maketitle
 $endif$
@@ -986,6 +993,7 @@ $if(beamer)$
 \begin{frame}[allowframebreaks]{$biblio-title$}
   \bibliographytrue
   \printbibliography[heading=none]
+  \clearpage\thispagestyle{empty}
 \end{frame}
 $else$
 \printbibliography$if(biblio-title)$[title=$biblio-title$]$endif$
@@ -995,8 +1003,15 @@ $endif$
 % === START DAVID ADDITIONS ===
 $if(beamer)$
 % create a frame using the endpage template
-\frame{\usebeamertemplate{qapage}}
-\frame{\usebeamertemplate{endpage}}
+\begin{frame}
+  \usebeamertemplate{qapage}
+  \clearpage\thispagestyle{empty}
+\end{frame}
+
+\begin{frame}
+  \usebeamertemplate{endpage}
+  \clearpage\thispagestyle{empty}
+\end{frame}
 $endif$
 % === END DAVID ADDITIONS ===
 
