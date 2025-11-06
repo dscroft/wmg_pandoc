@@ -121,7 +121,7 @@ def latex(texfile):
     if return_code:
         raise subprocess.CalledProcessError(return_code, latex_defaults, lines)
     
-    return texfile[:-3] + "pdf"
+    return os.path.splitext(texfile)[0] + ".pdf"
 
 def move(src, dst):
     logging.info("Moving %s to %s", src, dst)
