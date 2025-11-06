@@ -12,7 +12,7 @@ import re
 import shutil
 import logging
 import getopt
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 
 rootdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
@@ -27,7 +27,7 @@ def pandoc(markdownfile, mode):#
         to avoid multiple runs of pdflatex during development.
     """
 
-    logging.info(f"Running pandoc on {markdownfile} in {mode} mode")
+    logging.info("Running pandoc on %s in %s mode", markdownfile, mode)
     
     filename = os.path.splitext(os.path.basename(markdownfile))[0] 
 
@@ -40,7 +40,11 @@ def pandoc(markdownfile, mode):#
                         "--filter=pandoc-imagecrop",
                         "--filter=pandoc-attribution",
                         "--filter=pandoc-include-code",
+                        "--highlight-style=pygments.theme",
                         "--citeproc" ]
+    
+    # pandoc --list-highlight-styles
+    # pandoc -o pygments.theme --print-highlight-style=pygments
 
     beamer_defaults = ["--to=beamer+smart", 
                        f"--template={opj(rootdir, 'wmg_pandoc', 'wmg_new.latex')}", 
@@ -74,11 +78,11 @@ def pandoc(markdownfile, mode):#
 
     # Ensure the output directory exists
     outdir = os.path.dirname(outfilename[mode])
-    logging.debug(f"Create directory {outdir}")
+    logging.debug("Create directory %s", outdir)
     os.makedirs(outdir, exist_ok=True)
     
 
-    logging.debug(f"Running command: {' '.join(pandoc_cmds[mode])}")
+    logging.debug("Running command: %s", ' '.join(pandoc_cmds[mode]))
     popen = subprocess.Popen(pandoc_cmds[mode], cwd=opj(rootdir,"wmg_pandoc"), 
                               universal_newlines=True, 
                               stdout=subprocess.PIPE, 
@@ -97,7 +101,7 @@ def pandoc(markdownfile, mode):#
 
 
 def latex(texfile):
-    logging.info(f"Running LaTeX on {texfile}")
+    logging.info("Running LaTeX on %s", texfile)
 
     latex_defaults = ["pdflatex", 
                       "-interaction=nonstopmode",          
@@ -106,7 +110,7 @@ def latex(texfile):
                       f"-output-directory={os.path.dirname(texfile)}",
                       texfile]
     
-    logging.debug(f"Running command: {' '.join(latex_defaults)}")
+    logging.debug("Running command: %s", ' '.join(latex_defaults))
     popen = subprocess.Popen(latex_defaults, cwd=opj(rootdir,"wmg_pandoc"), 
                               universal_newlines=True, 
                               stdout=subprocess.PIPE, 
@@ -120,13 +124,13 @@ def latex(texfile):
     return texfile[:-3] + "pdf"
 
 def move(src, dst):
-    logging.info(f"Moving {src} to {dst}")
+    logging.info("Moving %s to %s", src, dst)
 
-    logging.debug(f"Create directory {os.path.dirname(dst)}")
+    logging.debug("Create directory %s", os.path.dirname(dst))
     os.makedirs(os.path.dirname(dst), exist_ok=True)
 
     if os.path.isdir(dst):
-        logging.debug(f"{dst} is a directory, appending filename")
+        logging.debug("%s is a directory, appending filename", dst)
         dst = os.path.join(dst, os.path.basename(src))
 
     shutil.move(src, dst)
@@ -152,26 +156,26 @@ def generate(markdownfile, mode, loop_num=1):
         elif mode in ("notes", "present"):
             texfile = pandoc(markdownfile, mode)
             for i in range(loop_num):
-                logging.debug(f"LaTeX run {i+1} of {loop_num}")
+                logging.debug("LaTeX run %d of %d", i+1, loop_num)
                 pdf_file = latex(texfile)
             move(pdf_file, opj(rootdir, mode))
     except subprocess.CalledProcessError as e:
-        logging.debug( f"Error running command: {" ".join(e.cmd)}" )
+        logging.debug("Error running command: %s", " ".join(e.cmd))
         if isinstance(e.output, list) and e.output:
             for line in e.output[-30:]:
                 logging.error( line )
         return True
 
 
-def find_files(markdownfile, rootdir):
+def find_files(markdownfile, searchdir):
     # regex = r"!include\s*([a-zA-Z0-9_.\/\-]+"+re.escape(markdownfile)+r")"
     regex = r"!include\s+(.*"+re.escape(markdownfile)+r")"
     reg = re.compile(regex)
 
     files = []
-    for filename in glob.glob(opj(rootdir, "**", "*.md"), recursive=True):
+    for filename in glob.glob(opj(searchdir, "**", "*.md"), recursive=True):
         print( filename )
-        with open(filename, "r") as f:
+        with open(filename, "r", encoding="utf-8") as f:
             matches = reg.findall(f.read())
             if matches:
                 files.append(os.path.basename(filename))
@@ -179,7 +183,7 @@ def find_files(markdownfile, rootdir):
     return files
 
 
-if __name__ == "__main__":
+def main():
     # Default logging level
     loglevel = logging.INFO
 
@@ -197,12 +201,10 @@ if __name__ == "__main__":
 
     if len(args) < 1:
         print("Usage: python3 build.py [-d|--debug] <file.md> [version]")
-        sys.exit(1)
+        return 1
 
     markdownfile = args[0]
     version = args[1] if len(args) > 1 else "notes"
-
-    rootdir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
     files = [markdownfile]
     # specified file exists in the src directory then gen that file,
@@ -224,5 +226,7 @@ if __name__ == "__main__":
         files.pop(0)
 
     print( f"{Fore.GREEN}Done.{Style.RESET_ALL}" )
-    sys.exit(0)
+
+if __name__ == "__main__":
+    sys.exit(main())
 
