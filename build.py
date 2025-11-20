@@ -41,6 +41,7 @@ def pandoc(markdownfile, mode):#
                         "--filter=pandoc-attribution",
                         "--filter=pandoc-include-code",
                         "--highlight-style=pygments.theme",
+                        "--variable=lang=en-UK",
                         "--citeproc" ]
     
     # pandoc --list-highlight-styles
@@ -48,7 +49,8 @@ def pandoc(markdownfile, mode):#
 
     beamer_defaults = ["--to=beamer+smart", 
                        f"--template={opj(rootdir, 'wmg_pandoc', 'wmg_new.latex')}", 
-                       "--slide-level=2"]
+                       "--slide-level=2",
+                       "--variable=colorlinks=true"]
     
     html_defaults = ["--to=html", 
                      "--embed-resources", 
