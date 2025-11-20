@@ -10,11 +10,22 @@ Needs pygraphviz
 import os
 import sys
 
-import pygraphviz
+try:
+    import pygraphviz
+except ImportError:
+    pass
 import requests
 
-from pandocfilters import toJSONFilter, Para, Image, get_filename4code, get_caption, get_extension, get_value
-import shutil
+from pandocfilters import toJSONFilter, Para, Plain, Image, get_filename4code, get_caption, get_extension, get_value
+
+# pandocfilters does not have Figure in versions < 1.5.0 which is needed to add captions
+# so we define a fallback here
+try:
+    from pandocfilters import Figure
+except ImportError:
+    # pandocfilters version < 1.5.0
+    sys.stderr.write("pandocfilters version < 1.5.0 detected, captions for graphviz images will not be supported.\n")
+    Figure = None
 
 def graphviz(key, value, format, _):
     if key == 'CodeBlock':
@@ -27,11 +38,16 @@ def graphviz(key, value, format, _):
 
             if not os.path.isfile(dest):
                 # assuming that the specified program is installed and in PATH
-                if shutil.which(prog):
-                    g = pygraphviz.AGraph(string=code)
-                    g.layout()
-                    g.draw(dest, prog=prog)
-                    sys.stderr.write(f'Created image {dest}\n')
+                if "pygraphviz" in globals():
+                    try:
+                        g = pygraphviz.AGraph(string=code)
+                        g.layout()
+                        g.draw(dest, prog=prog)
+                        sys.stderr.write(f'Created image {dest}\n')
+                    except pygraphviz.DotError as e:
+                        sys.stderr.write(f"Error creating graphviz image: {e}\n")
+                        sys.stderr.write(code)
+                        sys.exit(1)
                 # otherwise using quickchart.io api
                 else:
                     url = f"https://quickchart.io/graphviz?format={requests.utils.quote(filetype)}&graph={requests.utils.quote(code)}"
@@ -40,7 +56,14 @@ def graphviz(key, value, format, _):
                         f.write(response.content)
                     sys.stderr.write(f'Created image using quickchart.io {dest}\n')
 
+            # see https://github.com/jgm/pandocfilters/commit/9988f9a6e4528d2ce3c4b885b8eed9328c3b408a
+            if caption and Figure is not None:
+                 return Figure(["",[],[]],
+                               [None,[Para(caption)]],
+                               [Plain([Image([ident, [], keyvals], caption, [dest, typef])])])
+
             return Para([Image([ident, [], keyvals], caption, [dest, typef])])
+            
 
 if __name__ == "__main__":
     toJSONFilter(graphviz)
