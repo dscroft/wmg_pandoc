@@ -408,10 +408,12 @@ $if(beamer)$
     \definecolor{wmgyellow}{RGB}{255 187 52}
 
     %\usefonttheme{structurebold}
-    \setbeamercolor{structure}{fg=red}
+    \setbeamercolor{structure}{fg=wmgred} % shouldn't really be using red for text
 
-    %\usepackage{arev}
-
+    % Bullet point colours
+    \setbeamercolor{item}{fg=wmgred}
+    \setbeamercolor{enumerate}{fg=wmgred}
+   
     \setbeamerfont{title}{size=\huge,parent=structure}
     \setbeamercolor{title}{fg=white}
     \setbeamerfont{subtitle}{size=\large,parent=structure}
@@ -423,7 +425,6 @@ $if(beamer)$
     \setbeamerfont{frametitle}{size=\Large,parent=structure}
     \setbeamercolor{frametitle}{fg=white}
     \setbeamerfont{section title}{size=\Huge,parent=structure}
-    \setbeamercolor{section title}{fg=white}
     \setbeamercolor{section title}{fg=white}
     \setbeamerfont{quote}{size=\Large,parent=structure}
     \setbeamerfont{note page}{size=\scriptsize}
@@ -657,17 +658,10 @@ $if(beamer)$
         };
      \end{tikzpicture}
 
-      \note{Use `pdfpc --notes=right file.pdf`}
-      \note[item]{ctrl + q to quit}
-      \note[item]{shift + c to arrange notes layout}
-      \note[item]{1 nothing}
-      \note[item]{2 laser}
-      \note[item]{3 pen}
-      \note[item]{4 eraser}
-      \note[item]{5 torch}
-      \note[item]{c clear drawing}
-      \note[item]{d show/hide drawing}
-      \note[item]{? cheat sheet}
+      \note{Present with \href{https://github.com/Cimbali/pympress/releases/}{Pympress} (even on on locked down Windows) or pdfpc.}
+
+      \note[item]{`pympress file.pdf`}
+      \note[item]{`pdfpc --notes=right file.pdf`}
     }
 
     \setbeamertemplate{section page}{
@@ -864,8 +858,8 @@ $if(colorlinks)$
   colorlinks=true,
   linkcolor={$if(linkcolor)$$linkcolor$$else$Blue$endif$},
   filecolor={$if(filecolor)$$filecolor$$else$Maroon$endif$},
-  citecolor={$if(citecolor)$$citecolor$$else$Blue$endif$},
-  urlcolor={$if(urlcolor)$$urlcolor$$else$Blue$endif$},
+  citecolor={$if(citecolor)$$citecolor$$else$Black$endif$},
+  urlcolor={$if(urlcolor)$$urlcolor$$else$wmgblue$endif$},
 $else$
 $if(boxlinks)$
 $else$
