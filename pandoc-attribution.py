@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+
+"""
+Pandoc filter to filter out elements with a specific class.
+
+For example...
+
+    pandoc -t json | python3 pandoc-classfilter myclass | pandoc
+
+
+Needs pandocfilers
+"""
+
+import os
+import sys
+
+
+from pandocfilters import toJSONFilter, Str, Div
+
+
+def attribution(key, value, format, meta):
+    if key == 'Div':
+        [[ident, classes, kvs], contents] = value
+        
+        if 'attribution' not in classes: return
+
+        if format == 'html':
+            kvs += [["style","font-size: small; text-align: right;"]]
+
+            return Div([ident, classes, kvs], contents)
+
+        elif format in ('latex', 'beamer'):
+            return [{'t': 'Plain', 'c': [
+                        {'t': 'RawInline', 'c': ['tex', '{ \\flushright ']}, 
+                        {'t': 'RawInline', 'c': ['tex', '\\tiny ']}]}] +  \
+                    contents + \
+                    [{'t': 'Plain', 'c': [
+                        {'t': 'RawInline', 'c': ['tex', '} ']}]}]
+
+
+if __name__ == "__main__":
+    toJSONFilter(attribution)

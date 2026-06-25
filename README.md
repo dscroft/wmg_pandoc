@@ -71,3 +71,42 @@ It is a long established fact that a reader will be distracted by the readable c
 
 ## References {.allowframebreaks}
 ```
+
+# WMG machine installation
+
+If you need to run this on a WMG windows machine, do the following.
+
+## Python
+
+Install via the software center
+
+
+### Packages
+
+Once you have python add the following pckages
+
+```
+python -m pip install pandoc-include pandocfilters requests pillow
+```
+
+Once complete you will need to copy the pandoc-include.exe file.
+
+Copy from: 
+C:\Users\YOURACCOUNT\AppData\Roaming\Python\Python314\Scripts
+
+To the wmg_pandoc/ folder
+
+
+## Pandoc
+
+Download and install 
+https://github.com/jgm/pandoc/releases/tag/3.1.13
+
+
+## Miktex
+
+Download and install
+https://miktex.org/download
+
+Select install missing packages on the fly.
+All updates.

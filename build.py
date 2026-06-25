@@ -36,10 +36,10 @@ def pandoc(markdownfile, mode):#
                         f"--resource-path={opj(rootdir, 'resource')}",
                         f"--metadata=include-resources:{opj(rootdir, 'src')}",
                         "--filter=pandoc-include",
-                        "--filter=graphviz",
-                        "--filter=pandoc-imagecrop",
-                        "--filter=pandoc-attribution",
-                        "--filter=pandoc-include-code",
+                        "--filter=graphviz.py",
+                        "--filter=pandoc-imagecrop.py",
+                        "--filter=pandoc-attribution.py",
+                        "--filter=pandoc-include-code.py",
                         "--highlight-style=pygments.theme",
                         "--variable=lang=en-UK",
                         "--citeproc" ]
@@ -56,7 +56,7 @@ def pandoc(markdownfile, mode):#
                      "--embed-resources", 
                      "--standalone", 
                      "--variable=maxwidth=50%", 
-                     "--filter=pandoc-classfilter"]
+                     "--filter=pandoc-classfilter.py"]
     
     outfilename = {"accessible": opj(rootdir,'accessible',f'{filename}.html'),
                    "present": opj(rootdir,'latex','present',f'{filename}.tex'),
@@ -215,6 +215,7 @@ def main():
 
     while files != []:
         currentfile = opj(rootdir, "src", files[0])
+        logging.debug( "Current file {}".format(currentfile) )
 
         if os.path.isfile(currentfile):
             print( f"Generating {currentfile}..." )
