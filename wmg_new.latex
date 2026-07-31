@@ -650,6 +650,11 @@ $if(beamer)$
               \usebeamerfont{author} \usebeamercolor[fg]{author} \insertauthor
             \fi
 
+            \ifx\insertinstitute\@empty%
+            \else
+              \usebeamerfont{institute} \insertinstitute
+            \fi
+
             \ifx\insertdate\@empty%
             \else
               \usebeamerfont{date} \insertdate
