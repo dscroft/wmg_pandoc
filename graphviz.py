@@ -23,8 +23,9 @@ from pandocfilters import toJSONFilter, Para, Plain, Image, get_filename4code, g
 try:
     from pandocfilters import Figure
 except ImportError:
-    # pandocfilters version < 1.5.0
-    sys.stderr.write("pandocfilters version < 1.5.0 detected, captions for graphviz images will not be supported.\n")
+    # can force a fix by installing this version
+    # python -m pip install "git+https://github.com/jgm/pandocfilters.git@9988f9a"
+    sys.stderr.write("pandocfilters version is lacking Figure support, captions for graphviz images will not be supported.\n")
     Figure = None
 
 def graphviz(key, value, format, _):
