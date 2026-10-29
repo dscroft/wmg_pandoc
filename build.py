@@ -37,6 +37,8 @@ def pandoc(markdownfile, mode):#
                         f"--metadata=include-resources:{opj(rootdir, 'src')}",
                         "--filter=pandoc-include",
                         "--filter=graphviz.py",
+                        "--filter=mermaid.py",
+                        "--filter=pandoc-imagefromweb.py",
                         "--filter=pandoc-imagecrop.py",
                         "--filter=pandoc-attribution.py",
                         "--filter=pandoc-include-code.py",
@@ -176,13 +178,13 @@ def find_files(markdownfile, searchdir):
 
     files = []
     for filename in glob.glob(opj(searchdir, "**", "*.md"), recursive=True):
-        print( filename )
+        #print( filename )
         with open(filename, "r", encoding="utf-8") as f:
             matches = reg.findall(f.read())
             if matches:
-                files.append(os.path.basename(filename))
+                files.append(os.path.relpath(filename, searchdir))
                 
-    return files
+    return sorted(files, key=lambda path: (os.path.dirname(path).count(os.sep), path))
 
 
 def main():
